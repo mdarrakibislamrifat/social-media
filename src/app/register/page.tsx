@@ -8,7 +8,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import LogoPNG from "../../../public/images/Vector.jpg";
-import { log } from "console";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/features/auth/authSlice";
+import { auth } from "@/firebase.config";
+import toast, { Toaster } from "react-hot-toast";
 
 const registerSchema = z
   .object({
@@ -29,6 +38,8 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const dispatch = useDispatch();
 
   const {
     register,
@@ -45,14 +56,65 @@ export default function RegisterPage() {
     },
   });
 
+  // Handle Email/Password Registration
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
+    setError(null);
     try {
-      console.log("Form data:", data);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
+      const user = userCredential.user;
 
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    } catch (error) {
+      // Dispatch user data to Redux store
+      dispatch(
+        setUser({
+          uid: user.uid,
+          email: user.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+        })
+      );
+      toast.success("Registration successful!");
+
+      console.log("User registered:", user);
+    } catch (error: any) {
+      setError(error.message || "Registration failed. Please try again.");
       console.error("Registration error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    setError(null);
+    const provider = new GoogleAuthProvider();
+    provider.addScope("email");
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      const displayName = user.displayName?.split(" ") || ["", ""];
+      const firstName = displayName[0] || "";
+      const lastName = displayName[1] || "";
+
+      dispatch(
+        setUser({
+          uid: user.uid,
+          email: user.email,
+          firstName,
+          lastName,
+        })
+      );
+
+      console.log("Google Sign-In successful:", user);
+    } catch (error: any) {
+      setError(error.message || "Google Sign-In failed. Please try again.");
+      console.error("Google Sign-In error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +122,13 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          className: "!z-[9999]",
+        }}
+      />
+
       <div className="w-full max-w-md">
         <div className="text-center">
           <div className="flex justify-center mb-6">
@@ -81,6 +150,10 @@ export default function RegisterPage() {
             Please Enter The Information Requested To Create Your Account
           </p>
         </div>
+
+        {error && (
+          <p className="text-red-500 text-center text-sm mb-4">{error}</p>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -231,7 +304,7 @@ export default function RegisterPage() {
             disabled={isLoading}
             className="w-full py-3 px-4 bg-[#000080] text-white font-medium rounded-md hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-70 mt-4"
           >
-            Register Account
+            {isLoading ? "Registering..." : "Register Account"}
           </button>
         </form>
 
@@ -263,7 +336,7 @@ export default function RegisterPage() {
             </button>
             <button
               type="button"
-              onClick={() => console.log("Google login")}
+              onClick={handleGoogleSignIn}
               disabled={isLoading}
               className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >

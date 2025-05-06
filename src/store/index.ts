@@ -1,12 +1,44 @@
-import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "@/features/auth/authSlice";
+import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export const store = configureStore({
-  reducer: {
-    auth: authReducer,
+// User interface
+interface UserState {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+}
+
+// Initial state
+interface AuthState {
+  user: UserState | null;
+}
+
+const initialState: AuthState = {
+  user: null,
+};
+
+// Create slice
+const authSlice = createSlice({
+  name: "auth",
+  initialState,
+  reducers: {
+    setUser: (state, action: PayloadAction<UserState>) => {
+      state.user = action.payload;
+    },
+    logout: (state) => {
+      state.user = null;
+    },
   },
 });
 
-// Infer types
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
+// Export actions
+export const { setUser, logout } = authSlice.actions;
+
+// Correct export for the reducer
+export const store = configureStore({
+  reducer: {
+    auth: authSlice.reducer, // This was incorrect, changed to authSlice.reducer
+  },
+});
+
+export default authSlice.reducer;

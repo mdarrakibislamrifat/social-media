@@ -71,7 +71,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Toaster position="top-center" />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          className: "!z-[9999]",
+        }}
+      />
+
       <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
         <div className="flex flex-col items-center justify-center mb-8">
           <div className="relative w-32 h-12 mb-6">
