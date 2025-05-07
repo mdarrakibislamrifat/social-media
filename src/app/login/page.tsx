@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -48,7 +48,11 @@ export default function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, data.email, data.password);
-
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error("User not found");
+      }
+      localStorage.setItem("user", JSON.stringify(user));
       toast.success("Login successful!");
       router.push("/");
 

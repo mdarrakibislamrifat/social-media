@@ -6,12 +6,13 @@ import { useDispatch, useSelector } from "react-redux";
 
 import LogoPNG from "../../public/images/Vector.jpg";
 import { AppDispatch, logoutWithPersistence, RootState } from "@/store";
+import { useEffect, useState } from "react";
 
 const Navbar = () => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.auth.user);
-  console.log("user", user);
+  const [isClient, setIsClient] = useState(false);
 
   const handleLogout = () => {
     dispatch(logoutWithPersistence());
@@ -22,9 +23,12 @@ const Navbar = () => {
     router.push("/login");
   };
 
-  const fullName = user
-    ? `${user.displayName || ""}`.trim() || user.email || "User"
-    : "User";
+  const fullName = user?.displayName || user?.email || "User";
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) return null;
 
   return (
     <nav className="flex justify-between items-center p-4 bg-white shadow-md">

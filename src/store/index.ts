@@ -11,7 +11,7 @@ interface AuthState {
   user: UserState | null;
 }
 
-const getInitialUser = (): UserState | null => {
+export const getInitialUser = (): UserState | null => {
   if (typeof window === "undefined") return null;
   try {
     const user = localStorage.getItem("user");
@@ -45,14 +45,25 @@ export const setUserWithPersistence =
   (user: UserState) => (dispatch: AppDispatch) => {
     dispatch(setUser(user));
     if (typeof window !== "undefined") {
-      localStorage.setItem("user", JSON.stringify(user));
+      try {
+        const userString = JSON.stringify(user);
+        console.log("Saving user to localStorage:", userString);
+        localStorage.setItem("user", userString);
+      } catch (error) {
+        console.error("Error saving user to localStorage", error);
+      }
     }
   };
 
 export const logoutWithPersistence = () => (dispatch: AppDispatch) => {
   dispatch(logout());
   if (typeof window !== "undefined") {
-    localStorage.removeItem("user");
+    try {
+      localStorage.removeItem("user");
+      console.log("User removed from localStorage");
+    } catch (error) {
+      console.error("Error removing user from localStorage", error);
+    }
   }
 };
 
