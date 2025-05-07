@@ -5,12 +5,12 @@ import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase
 
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAxyUO9WCsbvE-kmGXvRqc8px-YlyFxroI",
-  authDomain: "simple-firebase-57ac2.firebaseapp.com",
-  projectId: "simple-firebase-57ac2",
-  storageBucket: "simple-firebase-57ac2.firebasestorage.app",
-  messagingSenderId: "803656064227",
-  appId: "1:803656064227:web:facf4e8e37491e3e6f39d6"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 

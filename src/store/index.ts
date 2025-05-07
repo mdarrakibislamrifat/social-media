@@ -1,6 +1,5 @@
 import { configureStore, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-// User interface
 interface UserState {
   uid: string;
   email: string | null;
@@ -8,16 +7,25 @@ interface UserState {
   photoURL: string | null;
 }
 
-// Initial state
 interface AuthState {
   user: UserState | null;
 }
 
-const initialState: AuthState = {
-  user: null,
+const getInitialUser = (): UserState | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
+  } catch (error) {
+    console.error("Failed to parse user from localStorage:", error);
+    return null;
+  }
 };
 
-// Create slice
+const initialState: AuthState = {
+  user: getInitialUser(),
+};
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -31,14 +39,35 @@ const authSlice = createSlice({
   },
 });
 
-// Export actions
 export const { setUser, logout } = authSlice.actions;
 
-// Correct export for the reducer
+export const setUserWithPersistence =
+  (user: UserState) => (dispatch: AppDispatch) => {
+    dispatch(setUser(user));
+    if (typeof window !== "undefined") {
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+  };
+
+export const logoutWithPersistence = () => (dispatch: AppDispatch) => {
+  dispatch(logout());
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("user");
+  }
+};
+
+// Redux store
 export const store = configureStore({
   reducer: {
-    auth: authSlice.reducer, // This was incorrect, changed to authSlice.reducer
+    auth: authSlice.reducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
 });
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
 
 export default authSlice.reducer;

@@ -3,16 +3,18 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "@/features/auth/authSlice";
+
 import LogoPNG from "../../public/images/Vector.jpg";
+import { AppDispatch, logoutWithPersistence, RootState } from "@/store";
 
 const Navbar = () => {
   const router = useRouter();
-  const dispatch = useDispatch();
-  const user = useSelector((state: any) => state.auth.user);
+  const dispatch = useDispatch<AppDispatch>();
+  const user = useSelector((state: RootState) => state.auth.user);
+  console.log("user", user);
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutWithPersistence());
     router.push("/login");
   };
 
@@ -20,10 +22,9 @@ const Navbar = () => {
     router.push("/login");
   };
 
-  // Construct full name from firstName and lastName
   const fullName = user
-    ? `${user.firstName || ""} ${user.lastName || ""}`.trim()
-    : "";
+    ? `${user.displayName || ""}`.trim() || user.email || "User"
+    : "User";
 
   return (
     <nav className="flex justify-between items-center p-4 bg-white shadow-md">
@@ -34,15 +35,13 @@ const Navbar = () => {
         {user ? (
           <>
             <Image
-              src={user.profileImage || "/default-profile.png"}
+              src={user.photoURL || "/default-profile.png"}
               alt="Profile"
               width={30}
               height={30}
               className="rounded-full"
             />
-            <span className="text-gray-800 font-medium">
-              {fullName || user.email || "User"}
-            </span>
+            <span className="text-gray-800 font-medium">{fullName}</span>
             <button
               onClick={handleLogout}
               className="text-blue-600 hover:text-blue-800"

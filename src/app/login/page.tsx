@@ -9,6 +9,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import LogoPNG from "../../../public/images/Vector.jpg";
+import { useRouter } from "next/navigation";
+import { auth } from "@/firebase.config";
+import {
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from "firebase/auth";
 
 // Define the form schema with Zod
 const loginSchema = z.object({
@@ -18,10 +25,10 @@ const loginSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
-
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -40,12 +47,13 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await signInWithEmailAndPassword(auth, data.email, data.password);
 
       toast.success("Login successful!");
+      router.push("/");
 
       console.log("Login successful with data:", data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
       toast.error("Invalid email or password. Please try again.");
     } finally {
@@ -57,16 +65,31 @@ export default function LoginPage() {
     setShowPassword(!showPassword);
   };
 
-  const handleSocialLogin = (provider: string) => {
+  const handleSocialLogin = async (provider: string) => {
     setIsLoading(true);
     toast.loading(`Logging in with ${provider}...`);
 
-    setTimeout(() => {
+    try {
+      if (provider === "Google") {
+        const googleProvider = new GoogleAuthProvider();
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        console.log("Google login user:", user);
+        toast.dismiss();
+        toast.success(`${provider} login successful!`);
+        router.push("/");
+      } else {
+        toast.dismiss();
+        toast.success(`${provider} login successful!`);
+        console.log(`Logged in with ${provider}`);
+      }
+    } catch (error) {
+      console.error(`${provider} login error:`, error);
       toast.dismiss();
-      toast.success(`${provider} login successful!`);
-      console.log(`Logged in with ${provider}`);
+      toast.error(`Failed to login with ${provider}.`);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
