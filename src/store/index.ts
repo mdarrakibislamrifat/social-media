@@ -60,7 +60,6 @@ export const logoutWithPersistence = () => (dispatch: AppDispatch) => {
   if (typeof window !== "undefined") {
     try {
       localStorage.removeItem("user");
-      console.log("User removed from localStorage");
     } catch (error) {
       console.error("Error removing user from localStorage", error);
     }

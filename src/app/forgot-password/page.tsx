@@ -7,6 +7,9 @@ import { z } from "zod";
 import Image from "next/image";
 import Link from "next/link";
 import LogoPNG from "../../../public/images/Vector.jpg";
+import { toast, Toaster } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { sendResetCodeEmail } from "../utils/email";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -14,8 +17,13 @@ const forgotPasswordSchema = z.object({
 
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
+const generate6DigitCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -31,10 +39,16 @@ export default function ForgotPasswordPage() {
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     setIsLoading(true);
     try {
-      console.log("Sending reset code to:", data.email);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const code = generate6DigitCode();
+      localStorage.setItem("resetEmail", data.email);
+      localStorage.setItem("resetCode", code);
+
+      await sendResetCodeEmail(data.email); // Ensure email is sent with the correct code
+      toast.success("Reset code sent to your email.");
+      router.push("/submit-code");
     } catch (error) {
-      console.error("Password reset error:", error);
+      toast.error("Failed to send reset code.");
+      console.error("Reset code error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -42,6 +56,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
+      <Toaster />
       <div className="w-full max-w-md">
         <div className="text-center">
           <div className="flex justify-center mb-6">
@@ -56,10 +71,10 @@ export default function ForgotPasswordPage() {
             </div>
           </div>
           <h1 className="text-2xl font-bold text-gray-800 mb-1">
-            Forget Password!
+            Forgot Password!
           </h1>
           <p className="text-gray-600 mb-6">
-            Enter Your Registered Email Below
+            Enter your registered email below to receive a reset code.
           </p>
         </div>
 
@@ -74,7 +89,7 @@ export default function ForgotPasswordPage() {
             <input
               id="email"
               type="email"
-              placeholder="georgia.young@example.com"
+              placeholder="your@email.com"
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 ${
                 errors.email
                   ? "border-red-500 focus:ring-red-500"
@@ -107,7 +122,7 @@ export default function ForgotPasswordPage() {
             disabled={isLoading}
             className="w-full py-3 px-4 bg-[#000080] text-white font-medium rounded-md hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-70 mt-4"
           >
-            Send Code
+            {isLoading ? "Sending..." : "Send Code"}
           </button>
         </form>
       </div>
